@@ -1,127 +1,250 @@
+"use client"
+
+import { Header } from "@/components/header"
+import { Navigation } from "@/components/navigation"
+import { Footer } from "@/components/footer"
+import { FloatingWhatsApp } from "@/components/floating-whatsapp"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import Link from "next/link"
+import { Camera, MessageCircle, Target, Sprout, ChevronLeft, ChevronRight } from "lucide-react"
+import { useState, useEffect } from "react"
+import type { Slider } from "@/lib/types"
 
 export default function HomePage() {
+  const [bestSellerIndex, setBestSellerIndex] = useState(0)
+  const [featuredIndex, setFeaturedIndex] = useState(0)
+  const [sliders, setSliders] = useState<Slider[]>([])
+
+  const bestSellerSlides = sliders.filter((s) => s.group === "bestSeller")
+  const featuredSlides = sliders.filter((s) => s.group === "featured")
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch("/api/sliders", { cache: "no-store" })
+        const data = await res.json()
+        setSliders(Array.isArray(data) ? data : [])
+      } catch {
+        setSliders([])
+      }
+    }
+    load()
+  }, [])
+
+  useEffect(() => {
+    if (bestSellerSlides.length === 0) return
+    const timer = setInterval(() => {
+      setBestSellerIndex((prev) => (prev + 1) % bestSellerSlides.length)
+    }, 1500)
+    return () => clearInterval(timer)
+  }, [bestSellerSlides.length])
+
+  useEffect(() => {
+    if (featuredSlides.length === 0) return
+    const timer = setInterval(() => {
+      setFeaturedIndex((prev) => (prev + 1) % featuredSlides.length)
+    }, 1500)
+    return () => clearInterval(timer)
+  }, [featuredSlides.length])
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      {/* Hero Section */}
-      <div className="flex flex-col items-center justify-center min-h-screen px-4 text-center">
-        <div className="max-w-4xl mx-auto space-y-8">
-          {/* Logo/Icon */}
-          <div className="flex justify-center mb-8">
-            <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <Navigation />
+      <FloatingWhatsApp />
+
+      <main className="max-w-4xl mx-auto p-4 space-y-6">
+        {/* Best Seller Section */}
+        <section>
+          <h2 className="text-xl md:text-2xl font-bold text-center mb-4" style={{ color: "#0b4e8f" }}>
+            Best Seller
+          </h2>
+
+          <div className="relative rounded-3xl overflow-hidden shadow-lg">
+            <div className="relative">
+              <img
+                src={(bestSellerSlides[bestSellerIndex]?.image) || "/placeholder.svg"}
+                alt="Best Seller Banner"
+                className="w-full h-48 md:h-56 lg:h-64 object-cover"
+              />
+            </div>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white/90 text-[#0b4e8f] rounded-full shadow-md backdrop-blur-sm"
+              onClick={() =>
+                setBestSellerIndex((prev) => (prev - 1 + bestSellerSlides.length) % bestSellerSlides.length)
+              }
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white/90 text-[#0b4e8f] rounded-full shadow-md backdrop-blur-sm"
+              onClick={() => setBestSellerIndex((prev) => (prev + 1) % bestSellerSlides.length)}
+            >
+              <ChevronRight className="h-5 w-5" />
+            </Button>
+
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+              {bestSellerSlides.map((_, index) => (
+                <button
+                  key={index}
+                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                    index === bestSellerIndex ? "bg-white scale-110 shadow-md" : "bg-white/60 hover:bg-white/80"
+                  }`}
+                  onClick={() => setBestSellerIndex(index)}
                 />
-              </svg>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Shop By Category */}
+        <section>
+          <h2 className="text-xl md:text-2xl font-bold text-center mb-4" style={{ color: "#0b4e8f" }}>
+            Shop By Category
+          </h2>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { name: "Seeds", icon: Sprout },
+              { name: "Insecticides", icon: Sprout },
+              { name: "Herbicides", icon: Sprout },
+              { name: "Fungicides", icon: Sprout },
+            ].map(({ name, icon: Icon }) => (
+              <Button
+                key={name}
+                variant="outline"
+                className="flex flex-col items-center gap-3 p-6 h-auto border-2 border-[#0b4e8f]/20 hover:border-[#0b4e8f] hover:bg-[#0b4e8f]/5 bg-white rounded-3xl shadow-sm transition-all duration-300 hover:shadow-md hover:scale-105"
+              >
+                <div
+                  className="w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center shadow-md"
+                  style={{ backgroundColor: "#0b4e8f" }}
+                >
+                  <Icon className="h-6 w-6 md:h-7 md:w-7 text-white" />
+                </div>
+                <span className="text-sm font-semibold" style={{ color: "#0b4e8f" }}>
+                  {name}
+                </span>
+              </Button>
+            ))}
+          </div>
+        </section>
+
+        {/* Featured Products */}
+        <section>
+          <h2 className="text-xl md:text-2xl font-bold text-center mb-4" style={{ color: "#0b4e8f" }}>
+            Featured Products
+          </h2>
+
+          <div className="relative rounded-3xl overflow-hidden shadow-lg">
+            <div className="relative">
+              <img
+                src={(featuredSlides[featuredIndex]?.image) || "/placeholder.svg"}
+                alt="Featured Product Banner"
+                className="w-full h-48 md:h-56 lg:h-64 object-cover"
+              />
+            </div>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white/90 text-[#0b4e8f] rounded-full shadow-md backdrop-blur-sm"
+              onClick={() => setFeaturedIndex((prev) => (prev - 1 + featuredSlides.length) % featuredSlides.length)}
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white/90 text-[#0b4e8f] rounded-full shadow-md backdrop-blur-sm"
+              onClick={() => setFeaturedIndex((prev) => (prev + 1) % featuredSlides.length)}
+            >
+              <ChevronRight className="h-5 w-5" />
+            </Button>
+
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+              {featuredSlides.map((_, index) => (
+                <button
+                  key={index}
+                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                    index === featuredIndex ? "bg-white scale-110 shadow-md" : "bg-white/60 hover:bg-white/80"
+                  }`}
+                  onClick={() => setFeaturedIndex(index)}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Get Instant Pesticide Advice */}
+        <section>
+          <h2 className="text-xl md:text-2xl font-bold text-center mb-6" style={{ color: "#0b4e8f" }}>
+            Get Instant Pesticide Advice
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="text-center bg-white p-6 rounded-3xl shadow-sm">
+              <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-[#0b4e8f] to-[#0b4e8f]/80 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <Camera className="h-8 w-8 md:h-10 md:w-10 text-white" />
+              </div>
+              <h3 className="font-bold text-sm md:text-base mb-2" style={{ color: "#0b4e8f" }}>
+                1. Click Photo
+              </h3>
+              <p className="text-xs md:text-sm text-gray-600">Take A Clear Photo Of Your Crop Issue</p>
+            </div>
+
+            <div className="text-center bg-white p-6 rounded-3xl shadow-sm">
+              <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-[#9fd93b] to-[#8bc832] rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <MessageCircle className="h-8 w-8 md:h-10 md:w-10 text-[#0b4e8f]" />
+              </div>
+              <h3 className="font-bold text-sm md:text-base mb-2" style={{ color: "#0b4e8f" }}>
+                2. Send to WhatsApp
+              </h3>
+              <p className="text-xs md:text-sm text-gray-600">Share With Our Agricultural Experts</p>
+            </div>
+
+            <div className="text-center bg-white p-6 rounded-3xl shadow-sm">
+              <div className="w-16 h-16 md:w-20 md:h-20 bg-gradient-to-br from-[#0b4e8f] to-[#0b4e8f]/80 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <Target className="h-8 w-8 md:h-10 md:w-10 text-white" />
+              </div>
+              <h3 className="font-bold text-sm md:text-base mb-2" style={{ color: "#0b4e8f" }}>
+                3. Get Results
+              </h3>
+              <p className="text-xs md:text-sm text-gray-600">Receive Personalized Recommendations</p>
             </div>
           </div>
 
-          {/* Main Heading */}
-          <h1 className="text-5xl md:text-6xl font-bold text-white text-balance">Vigyat AgroStore</h1>
+          <Button
+            className="w-full font-bold rounded-3xl py-4 text-base shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+            style={{ backgroundColor: "#9fd93b", color: "#0b4e8f" }}
+            onClick={() => window.open("https://wa.me/919898543628", "_blank")}
+          >
+            Click Start WhatsApp Chat
+          </Button>
+        </section>
 
-          {/* Subtitle */}
-          <p className="text-xl md:text-2xl text-slate-300 font-medium">
-            Empowering Farmers with Modern Agriculture Solutions
-          </p>
+        {/* All Products */}
+        <section>
+          <h2 className="text-xl md:text-2xl font-bold text-center mb-4" style={{ color: "#0b4e8f" }}>
+            All Products
+          </h2>
 
-          {/* Description */}
-          <p className="text-lg text-slate-400 max-w-3xl mx-auto leading-relaxed">
-            Your trusted partner in agricultural excellence. From crop management to premium products, we're here to
-            help you grow better, harvest more, and thrive in modern farming.
-          </p>
+          <Button
+            variant="outline"
+            className="w-full font-bold rounded-3xl py-4 text-base bg-white border-2 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+            style={{ backgroundColor: "#9fd93b", color: "#0b4e8f", borderColor: "#9fd93b" }}
+          >
+            View All Products →
+          </Button>
+        </section>
+      </main>
 
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8">
-            <Link href="/admin">
-              <Button
-                size="lg"
-                className="bg-slate-700 hover:bg-slate-600 text-white border border-slate-600 px-8 py-3 text-lg font-medium"
-              >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                  />
-                </svg>
-                Admin Portal
-              </Button>
-            </Link>
-
-            <Link href="/services">
-              <Button
-                variant="outline"
-                size="lg"
-                className="border-slate-600 text-slate-300 hover:bg-slate-800 hover:text-white px-8 py-3 text-lg font-medium bg-transparent"
-              >
-                Explore Services
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      {/* Features Section */}
-      <div className="py-20 px-4">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold text-white text-center mb-12">Why Choose Vigyat AgroStore?</h2>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card className="bg-slate-800 border-slate-700 p-6">
-              <div className="text-green-500 mb-4">
-                <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-3">Premium Products</h3>
-              <p className="text-slate-400">
-                High-quality agricultural solutions including fertilizers, pesticides, and crop protection products.
-              </p>
-            </Card>
-
-            <Card className="bg-slate-800 border-slate-700 p-6">
-              <div className="text-green-500 mb-4">
-                <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-3">Modern Technology</h3>
-              <p className="text-slate-400">
-                Cutting-edge agricultural technology and smart farming solutions for better yields.
-              </p>
-            </Card>
-
-            <Card className="bg-slate-800 border-slate-700 p-6">
-              <div className="text-green-500 mb-4">
-                <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-3">Expert Support</h3>
-              <p className="text-slate-400">
-                Dedicated agricultural experts providing guidance and support for optimal farming practices.
-              </p>
-            </Card>
-          </div>
-        </div>
-      </div>
+      <Footer />
     </div>
   )
 }
